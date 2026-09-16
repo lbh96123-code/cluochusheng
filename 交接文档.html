@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AD 选技模型交接册</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f7f6f2; --paper:#ffffff; --ink:#1d1f1b; --ink2:#4a4d46; --mute:#7d8078;
+  --line:#dcdad2; --accent:#0f6e63; --accent2:#a3472c; --tint:#e6f0ec; --tint2:#f4e7e1;
+  --good:#1c7c4d; --bad:#a3472c; --warn:#8a6d1a; --code:#f0efe9;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#16181a; --paper:#1e2124; --ink:#e7e5df; --ink2:#c2bfb6; --mute:#8d8a82;
+  --line:#33373a; --accent:#5ec8b7; --accent2:#e08a6c; --tint:#1b2c29; --tint2:#2e2320;
+  --good:#5fc48c; --bad:#e08a6c; --warn:#d1ad4a; --code:#24282b; } }
+:root[data-theme="dark"]{
+  --bg:#16181a; --paper:#1e2124; --ink:#e7e5df; --ink2:#c2bfb6; --mute:#8d8a82;
+  --line:#33373a; --accent:#5ec8b7; --accent2:#e08a6c; --tint:#1b2c29; --tint2:#2e2320;
+  --good:#5fc48c; --bad:#e08a6c; --warn:#d1ad4a; --code:#24282b; }
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans SC",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.75;margin:0}
+.wrap{max-width:960px;margin:0 auto;padding-inline:20px;padding-block:32px 80px}
+h1,h2,h3{font-family:"Noto Serif SC","Noto Sans SC",serif;text-wrap:balance;line-height:1.3}
+h1{font-size:2rem;margin:0 0 6px}
+h2{font-size:1.35rem;margin:56px 0 14px;padding-top:14px;border-top:2px solid var(--accent)}
+h3{font-size:1.05rem;margin:26px 0 8px;color:var(--accent)}
+p{margin:0 0 12px;max-width:72ch}
+.lead{font-size:1.05rem;color:var(--ink2);max-width:72ch}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.entry{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--accent);padding:16px 20px;margin:22px 0;border-radius:4px}
+.entry a{font-family:"IBM Plex Mono",monospace;font-size:.95rem;word-break:break-all;color:var(--accent);font-weight:500}
+.warnbox{background:var(--tint2);border-left:4px solid var(--accent2);padding:12px 16px;margin:14px 0;border-radius:4px}
+.plain{background:var(--tint);border-left:4px solid var(--accent);padding:10px 14px;margin:10px 0 16px;border-radius:4px;font-size:.95rem}
+.plain b{color:var(--accent)}
+code,pre{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.86rem}
+code{background:var(--code);padding:1px 5px;border-radius:3px}
+pre{background:var(--code);padding:12px 14px;border-radius:4px;overflow-x:auto;line-height:1.55;margin:10px 0 16px}
+pre code{background:none;padding:0}
+.tbl{overflow-x:auto;margin:10px 0 18px}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{font-weight:500;color:var(--mute);font-size:.82rem;letter-spacing:.03em;white-space:nowrap}
+td.num{text-align:right;font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+.tag{display:inline-block;font-size:.75rem;padding:1px 7px;border-radius:3px;font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+.ok{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.no{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.mid{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.live{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+dl.gl{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0 0 16px}
+dl.gl dt{font-weight:500;white-space:nowrap}
+dl.gl dd{margin:0;color:var(--ink2)}
+@media (max-width:560px){dl.gl{grid-template-columns:1fr}dl.gl dd{margin-bottom:6px}}
+ul,ol{padding-left:1.3em;max-width:76ch}li{margin-bottom:5px}
+.toc{columns:2;column-gap:28px;font-size:.92rem;margin:8px 0 0}
+.toc a{color:var(--ink2);text-decoration:none}.toc a:hover{color:var(--accent)}
+@media (max-width:560px){.toc{columns:1}}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0 20px}
+.kv div{background:var(--paper);border:1px solid var(--line);padding:12px 14px;border-radius:4px}
+.kv .n{font-family:"IBM Plex Mono",monospace;font-size:1.3rem;font-weight:500;color:var(--accent)}
+.kv .l{font-size:.8rem;color:var(--mute)}
+a{color:var(--accent)}
+.foot{margin-top:60px;color:var(--mute);font-size:.85rem;border-top:1px solid var(--line);padding-top:14px}
+</style>
+
+</head><body><div class="wrap">
+<div class="eyebrow">Dota 2 Ability Draft · 选技胜负模型 · 2026-09-16 交接</div>
+<h1>AD 选技模型交接册</h1>
+<p class="lead">给接手的人看：这个模型是什么、怎么训的、数据在哪、一年来哪些做成了哪些做砸了、现在卡在哪、怎么接着干。所有数字都能在下面的链接里找到原始日志。</p>
+
+<div class="entry">
+<div class="eyebrow">全部数据 + 代码 + 日志 + 模型（只读，目录可浏览）</div>
+<p style="margin:6px 0 4px"><a href="http://43.130.62.185/adres-3fd0da4583c67d3a/">http://43.130.62.185/adres-3fd0da4583c67d3a/</a></p>
+<p style="margin:0;font-size:.92rem;color:var(--ink2)">这是腾讯云研究目录 <code>/root/adres/research</code> 的实时镜像（7.1 GB，927 项）：训练数据 npz、全部脚本、全部模型权重、每次实验的日志和结果 json、体检/记分卡输出、判错样本 Excel（<code>samples/</code>）、三份方法论文档 PDF（<code>doc_share/</code>）。链接不在任何页面上公开，只有拿到这个地址的人能进。</p>
+</div>
+
+<div class="warnbox"><b>先知道三件事。</b>①线上打分只看游戏内技能 ID，不查任何元数据；②胜负预测已接近天花板（约 69.5% 方向判对，校准良好），继续提准确率不是目标，目标是治"冷门组合评分波动导致 AI 选怪搭配"；③2026-09-14 到 09-16 用个人表现数据"精细化座位分"的全部尝试都没成功，原因已定位，写在第六节。</div>
+
+<div class="toc">
+<div><a href="#s0">0 词表</a></div><div><a href="#s1">1 项目与线上</a></div><div><a href="#s2">2 数据</a></div><div><a href="#s3">3 模型与训练</a></div><div><a href="#s4">4 评测口径</a></div><div><a href="#s5">5 进度全记录</a></div><div><a href="#s6">6 个人表现这条线（09-14 至 09-16）</a></div><div><a href="#s7">7 当前结论与待办</a></div><div><a href="#s8">8 怎么接手</a></div><div><a href="#s9">9 文件地图</a></div>
+</div>
+
+<h2 id="s0">0 · 词表</h2>
+<dl class="gl">
+<dt>AD</dt><dd>Ability Draft，Dota 2 的一个模式：10 个玩家从 60 件（12 个英雄本体 + 48 个技能）的池子里轮流选，每人 1 本体 + 4 技能。</dd>
+<dt>座位</dt><dd>一个玩家的 5 件东西（1 本体 + 4 技能）。一局 10 个座位，前 5 个一队、后 5 个一队。</dd>
+<dt>件 / 单件</dt><dd>本体或技能，共 640 件（513 技能 + 127 本体）。单件分 = 这件东西自己值多少。</dd>
+<dt>配合</dt><dd>同一座位里两件东西搭在一起额外的加减分。</dd>
+<dt>克制</dt><dd>我方一件对敌方一件的加减分（跨队）。</dd>
+<dt>阵容项</dt><dd>队伍层面的修正：打钱位堆太多要扣分、同一类型扎堆要扣分。</dd>
+<dt>座位分</dt><dd>单件 + 座位内配合，一个数，单位是对数几率，0.1 约等于 2.5 个百分点胜率。</dd>
+<dt>logloss</dt><dd>主指标，越小越好。猜 50% 的常数模型是 0.690；线上 0.5755；"两半数据各训一版"的对比里差 0.0015 以内算持平。</dd>
+<dt>方向判对</dt><dd>预测胜率超过 50% 的那队是否真的赢了。线上约 69.5%。</dd>
+<dt>两半一致性</dt><dd>把训练集切成不重叠的两半各训一个模型，对同一组冷门配合打分的相关系数。量"模型对冷门组合的判断靠不靠谱"。</dd>
+<dt>兑现率</dt><dd>A 半模型认为最好的正配合，在 B 半的真实对局里有几成还是正的。</dd>
+<dt>辅头 / λ</dt><dd>训练时顺带预测另一个目标（比如个人表现）的小头，λ 是它在总损失里的分量。</dd>
+<dt>g(n) 收缩</dt><dd>共现次数 n 少的正配合乘 n/(n+60) 打折，线上已用。</dd>
+<dt>发挥分</dt><dd>一个座位这局的赛后数据相对于"他这种位置该打成什么样"的高低。</dd>
+</dl>
+
+<h2 id="s1">1 · 项目与线上</h2>
+<p>线上模拟器 <a href="http://43.130.62.185/ad/">http://43.130.62.185/ad/</a>（Node 服务，房间制，人机/全知模式），配套 Windows 读屏插件（v1.27，截屏识别真实游戏的选技界面并给建议）。模型权重随页面下发，浏览器本地算分；打分同一份逻辑有三处实现必须逐位一致：网页 <code>ad_score.js</code>、AI 引擎 <code>server/mcts_fast.js</code>、研究侧 Python。</p>
+<div class="kv">
+<div><div class="n">603,859</div><div class="l">训练用对局（7.41c/d 补丁，windrun 抓取）</div></div>
+<div><div class="n">0.5755</div><div class="l">线上模型测试段 logloss（常数模型 0.690）</div></div>
+<div><div class="n">69.5%</div><div class="l">方向判对率（纯选技信息的天花板约 65~70%）</div></div>
+<div><div class="n">640</div><div class="l">可选件数：513 技能 + 127 英雄本体</div></div>
+</div>
+<div class="plain"><b>白话：</b>只看双方选了什么技能，猜谁赢。能猜到七成是因为选技只决定一部分，剩下的是操作和运气。</div>
+
+<h2 id="s2">2 · 数据</h2>
+<h3>来源</h3>
+<ul>
+<li><b>windrun.io</b>（主力）：每局给 10 个座位的完整技能组、60 件池子、选取顺序、胜负、时长，以及每人赛后的击杀/死亡/助攻/gpm/xpm/补刀/伤害/治疗。Cloudflare 只放 curl 的 TLS 指纹，抓取必须走 curl；服务器在美国被拦，经用户电脑的 SSH 隧道转发。</li>
+<li><b>Steam 官方接口</b>：定点补齐 7.41d/e 的对局（密钥在腾讯云 <code>~/.steam_key</code>）。</li>
+<li><b>OpenDota</b>：只用来产无偏的 match_id 种子，以及少量分段经济/眼/控制数据（免费 3000 次/天，<code>od/od_741d.jsonl</code> 约 1.5 万局）。STRATZ 不收 AD 局，别再试。</li>
+</ul>
+<h3>训练文件（都在共享目录根）</h3>
+<div class="tbl"><table>
+<tr><th>文件</th><th>内容</th><th>大小</th></tr>
+<tr><td><code>data_pure_d.npz</code></td><td><code>seats</code> (603859,10,5) 每座位 5 件的编号；<code>y</code> 左队是否赢；<code>patch</code> 版本；<code>ntr/nva/nte</code> = 510,640 / 23,305 / 69,914 的切分点。按开局时间排序，训练 [0,ntr) 验证 [ntr,nva) 测试 [nva,n)，不许重洗。</td><td class="num">43 MB</td></tr>
+<tr><td><code>data_perf_raw_d.npz</code></td><td><code>raw</code> (n,10,8) 每座位赛后 8 项：kills/deaths/assists/gpm/xpm/lastHits/heroDamage/heroHealing；<code>dur</code> 时长秒。只许当训练期辅助信号或评测，推理禁用。</td><td class="num">88 MB</td></tr>
+<tr><td><code>data_perf_d.npz</code></td><td>上面 8 项的两种标准化口径（全局 z / 队内份额）。</td><td class="num">171 MB</td></tr>
+<tr><td><code>data_pure_d_hA / hB.npz</code>, <code>half_idx_dA/dB.npy</code></td><td>训练段对半切（不重叠）的两半，用于两半一致性测试。布局 = [该半训练][原验证][原测试]。</td><td></td></tr>
+<tr><td><code>pairaudit/model_pair.npz</code></td><td><code>names</code>：640 件的中文名（本体带"(本体)"）。</td><td></td></tr>
+<tr><td><code>matches_big.jsonl</code>, <code>wrb_*/w2*.out</code>, <code>steam/</code></td><td>原始对局 JSON（windrun / Steam），<code>prep_d.py</code> 从这些生成上面的 npz。</td><td class="num">数 GB</td></tr>
+</table></div>
+<div class="plain"><b>白话：</b>训练只用 <code>data_pure_d.npz</code> 里的编号和胜负。赛后数据放在另一个文件里，线上永远看不到。</div>
+
+<h2 id="s3">3 · 模型与训练</h2>
+<h3>铁律（2026-09-04 定，09-11 修订）</h3>
+<ul>
+<li><b>推理只看 ID</b>：线上打分输入就是 10 座位 × 5 件的编号，不查属性、不查说明书、不查赛后数据。</li>
+<li><b>训练允许额外监督</b>（说明书、赛后表现、分路、玩家分数作控制变量），但导出的权重仍是纯 ID 查表，且报告里必须标明用了什么。</li>
+<li><b>反对称</b>：<code>z = f(左队) − f(右队)</code>，f 共享参数，把两队对调 z 必须变号（评测台自检，超 1e-3 判作废）。天辉先手优势约 53.8% 由评测台单独拟一个截距，模拟器里扔掉。</li>
+<li><b>切分固定，测试段只在最后碰一次</b>。</li>
+</ul>
+<h3>打分公式（线上 <code>model_plan15_clr0.25</code> + 后续三项）</h3>
+<pre><code>座位分 s  = Σ_{i∈座位} w_i                          单件：640 个标量
+          + Σ_{i&lt;j∈座位} Σ_k σ_k · e_ik · e_jk        配合：每件一个 96 维向量 e，
+                                                    前 48 维 σ=+1（相似加分）后 48 维 σ=−1（同类扎堆扣分）
+队伍分 f  = Σ_{5 座位} s
+          + θ(Σ 打钱载荷)                            阵容项①：打钱位堆太多扣分，8 段分段线性，9 参数
+          + 簇对项(K=12, 78 参数)                     阵容项②：12 类型两两计数的二次型（堆治疗赚、堆力量近战亏）
+          + 队伍配比项(8 轴 36 参数)                   阵容项③：座位向量投 e 的 PCA 前 8 轴，"别在同一轴扎堆"
+z         = f(左) − f(右) + 克制项(PC16+B, 跨队)        克制：我方轴总量 × 敌方轴总量
+p(左赢)   = sigmoid(z)</code></pre>
+<p>后处理（不改训练，改显示和总分）：归因层把"泛用价值"从配合折回单件；玩家意见压缩项对中低顺位的正配合按共选频率打折；g(n) = n/(n+60) 对小样本正配合收缩。三处同源实现对拍误差 1e-8 量级。</p>
+<div class="plain"><b>白话：</b>每件东西一个分加一个 96 维"性格"向量。同座位两件的性格相似就加分，但相似到"同类扎堆"就扣分（这是 09-04 最大的一次突破，零新增参数把 logloss 从 0.5855 拉到 0.5773）。五个座位的分加起来，再按阵容是否失衡修一下，两队相减就是胜率。</div>
+<h3>训练过程（<code>exp_comp.py</code>，纯 numpy 手写）</h3>
+<ul>
+<li>参数：K=96，学习率 8e-4，batch 2048，最多 40 轮，验证 logloss 6 轮不进步早停，L2 1e-6。Adam 手写，梯度全部有限差分自检过（<code>GRADCHECK=1</code>）。</li>
+<li>辅头：λ=10 的 8 项个人表现头（<code>perflabels.py</code>，混合口径），只在训练期，导出时扔掉。<b>注意</b>线上那份权重里的辅头矩阵是随机值（导出时形状不符被重置），要看辅头请用研究侧底座 <code>model_comp_K96_lam10.0_b8_sgn_win_d.npz</code>。</li>
+<li>打钱载荷 fw 用输方数据在训练段估好后<b>冻结</b>（免 collider 偏差、免泄漏）。</li>
+<li>分段训练优于联合从零训：克制项、簇对、配比都是冻结底座后单独拟合的；三次实验证明"全部从零一起训"更差。</li>
+<li>一次全量约 25 到 50 分钟（腾讯云 2 核 2 GB，nice 19）。</li>
+<li>命令：<code>BENCH_PURE=data_pure_d.npz PERF_RAW=data_perf_raw_d.npz SIGNED=1 WITHIN=1 EXT_TAG=_d python3 exp_comp.py 96 40 8e-4 10.0 8</code>，产出 <code>model_&lt;tag&gt;.npz</code> / <code>result_&lt;tag&gt;.json</code> / <code>pf_&lt;tag&gt;.log</code>。</li>
+</ul>
+<h3>AI 选手</h3>
+<p><code>server/ai.js</code>：每手取一步加分前 10 的候选，各自用"双方贴近真人水平的随机走子到满编"评 128 次取平均（温度 0.05，共用随机数），对贪心 99% 胜场。走子改良、族群、更多次数三条都测平，这条线到头。候选筛子已修两处偏差（空座位加剩余槽 × 归因项；阵容项按满编尺度）。</p>
+
+<h2 id="s4">4 · 评测口径</h2>
+<p>任何改动都走 <code>bench.evaluate()</code>，产出 RESULT 行、校准表、反对称自检。总误差只当护栏（差 0.0015 以内算持平）；判断"变好"看六项记分卡（<code>scorecard.py</code>）：</p>
+<div class="tbl"><table>
+<tr><th>指标</th><th>量什么</th><th>基线（扩数据版）</th></tr>
+<tr><td>分组校准</td><td>按阵容构成分组，预测胜率和实际差多少</td><td class="num">0.93pp（2 组超 3 倍误差）</td></tr>
+<tr><td>胜率刻度</td><td>十档预测胜率各自的实际偏差</td><td class="num">最大 1.78pp</td></tr>
+<tr><td>冷门两半一致性</td><td>共现 1-30 / 30-100 / 100-300 次的配合，两半模型打分相关</td><td class="num">0.823 / 0.815 / 0.784</td></tr>
+<tr><td>冷门兑现率</td><td>A 半前 10% 正配合在 B 半真实胜率里剩几成</td><td class="num">38% / 58% / 75%</td></tr>
+<tr><td>赢家诅咒</td><td>AI 自评座位分比中立裁判高多少</td><td class="num">约 1.8pp/座，g(n) 已近最优</td></tr>
+<tr><td>人工共识</td><td>与 4 人对 80 对可疑组合 1-5 打分（ICC 0.85）的相关</td><td class="num">0.570</td></tr>
+</table></div>
+<div class="plain"><b>白话：</b>胜率准不准已经不是问题，问题是几百局样本的冷门组合评分稳不稳。两半一致性和兑现率就是量这个的。</div>
+
+<h2 id="s5">5 · 进度全记录</h2>
+<p>按时间列，成功的和失败的都在。<span class="tag live">线上</span> 已部署；<span class="tag ok">成</span> 有正向证据未部署；<span class="tag no">败</span> 已判负别再试；<span class="tag mid">平</span> 无显著差异。</p>
+<div class="tbl"><table>
+<tr><th>日期</th><th>事项</th><th>结果</th><th>判定</th></tr>
+<tr><td>08-29</td><td>数据源侦察；windrun 公开胜率表零训练</td><td>AUC 0.72；纯 draft 天花板约 65~68% 准确率</td><td><span class="tag ok">成</span></td></tr>
+<tr><td>08-29</td><td>中介法（先预测 gpm 等再推胜负）</td><td>同特征下 AUC 完全相等，高维下反而差 0.004~0.010</td><td><span class="tag no">败</span></td></tr>
+<tr><td>08-29</td><td>跨队克制双线性 / 座位 DeepSets / 队伍非线性聚合 / pick order 加权 / 高共现自由参数</td><td>三个数据规模上全负或为零</td><td><span class="tag no">败</span></td></tr>
+<tr><td>09-04</td><td><b>配合项半正定切半</b>（前 48 维加、后 48 维减）</td><td>logloss 0.5855→0.5773，配对 t=+11.45，零新增参数；参数翻倍只值 −0.0001</td><td><span class="tag live">线上</span></td></tr>
+<tr><td>09-04</td><td>跨队克制 PC16+B（纯 e 主成分轴）</td><td>−0.002，方向对幅度小；满 96 维涂色输给 PC16</td><td><span class="tag live">线上</span></td></tr>
+<tr><td>09-04</td><td>克制项与主模型从零联合训</td><td>0.5797→0.5855 更差，分段训最优（第三次验证）</td><td><span class="tag no">败</span></td></tr>
+<tr><td>09-05</td><td>簇对项 K=12（78 参数）</td><td>0.57706→0.57586，t=+6.1；簇三元 0（被簇对吸收）</td><td><span class="tag live">线上</span></td></tr>
+<tr><td>09-08</td><td>队伍配比项（e 的 PCA 8 轴，36 项二次型）</td><td>−0.00051，t=+5.75；原版 Dota 20 万局独立拟合系数相关 +0.65 互证</td><td><span class="tag live">线上</span></td></tr>
+<tr><td>09-08</td><td>配合分对账（联合口径经验估计）+ 归因层</td><td>模型 corr 联合实测 0.82；据边际估计作废的"紧耦合虚高 / κ 收缩"已撤</td><td><span class="tag live">线上</span></td></tr>
+<tr><td>09-08</td><td>AI 走子取平均（K10/N128/T.05）</td><td>对贪心 99.25% 胜场；走子改良三条全平</td><td><span class="tag live">线上</span></td></tr>
+<tr><td>09-09</td><td>小样本正配合收缩 g(n)=n/(n+60)</td><td>测试 −0.00037，零模型 +0.0022；AI 座位不可验正配合 +0.109 vs 真实 +0.050 是 Goodhart</td><td><span class="tag live">线上</span></td></tr>
+<tr><td>09-09</td><td>AI 候选筛子修正（policyBonus）、全知模式</td><td>自对弈 73% 胜修前版本</td><td><span class="tag live">线上</span></td></tr>
+<tr><td>09-10</td><td>扩数据 +14 万跨版本局</td><td>直接混训变差；单件按版本分开持平；稀有正配合虚高不改善</td><td><span class="tag mid">平</span></td></tr>
+<tr><td>09-10</td><td>枢纽座位三元结构 / 主题门控 MoE</td><td>三元 0；MoE K=12 −0.0026 z=−9.4 唯一显著，未上线</td><td><span class="tag ok">成</span></td></tr>
+<tr><td>09-11</td><td>技能说明书 190 维 vs 模型空间</td><td>解释 e 12%，对模型误差解释力 0；只作面板解释/冷启动</td><td><span class="tag mid">平</span></td></tr>
+<tr><td>09-11</td><td>表现口径"跟谁搭"两两修正（事后叠加）</td><td>−0.00154 z=−7.9，9 月最大单项增量；违 ID 铁律未上线</td><td><span class="tag ok">成</span></td></tr>
+<tr><td>09-11</td><td>IMP 式合成分（仿 STRATZ）当组合标签</td><td>判本局 97.5%，但预测未来真实胜负更差，修正项系数为负</td><td><span class="tag no">败</span></td></tr>
+<tr><td>09-14</td><td>辅头目标改队内份额（λ 10 / 3）</td><td>总误差变差，冷门一致性 0.75→0.69</td><td><span class="tag no">败</span></td></tr>
+<tr><td>09-15</td><td><b>扩 7.41d 同版本数据 +13.8 万局</b></td><td>0.57909→0.57774 z=−3.7，稀有正配合虚高减轻，人工共识 0.533→0.570</td><td><span class="tag ok">成 · 待部署</span></td></tr>
+<tr><td>09-15</td><td>份额辅头 + 赢没赢控制列，λ 3/10/30/100</td><td>λ 越大越差单调；λ3 冷门一致性全档降 0.06、兑现降 6-9pp</td><td><span class="tag no">败</span></td></tr>
+<tr><td>09-15</td><td>纯表现模型（技能→8 项绝对表现，不碰胜负）</td><td>治疗 .77 补刀 .71 gpm .55；<b>胜负模型嵌入线性读出同样准</b>（0.545/0.700/0.746）</td><td><span class="tag mid">平</span></td></tr>
+<tr><td>09-15</td><td>人工标注 80 对可疑组合（4 人）</td><td>ICC 0.85，与面板 0.42；漏标方向 = 被 g(n) 压低的冷门正配合</td><td><span class="tag ok">成</span></td></tr>
+<tr><td>09-16</td><td>KDA / 综合分可预测性；旧座位分 vs 表现模型综合分</td><td>座位级新版更贴个人表现（0.44 vs 0.19），队伍总和等价，判胜负旧版强（69.4 vs 64.3）</td><td><span class="tag mid">平</span></td></tr>
+<tr><td>09-16</td><td>联合训练：一维综合分辅头 λ3/10；8 项按 C 权重辅头 λ3/10</td><td>综合分头伤胜率（0.5830/0.5902）；8 项 λ3 过护栏但座位分与基线相同、冷门一致性 0.82→0.73</td><td><span class="tag no">败</span></td></tr>
+<tr><td>09-16</td><td>按表现分功劳（座位梯度加权，带符号版 / 对称版）</td><td>带符号版发散（预测 1% 实际 20%）；对称版漂移 0.6006 / 0.6213；估计有偏，见第六节</td><td><span class="tag no">败</span></td></tr>
+</table></div>
+
+<h2 id="s6">6 · 个人表现这条线（09-14 至 09-16）</h2>
+<p>动机：胜负只给每局 1 比特，赢的一队 5 个座位一律记功，carry 和躺赢的拿一样的功劳；用赛后 8 项个人表现把功劳分开，座位分就该更细、几百局样本的冷门组合就该估得更稳。</p>
+<h3>试过的四种接法</h3>
+<ol>
+<li><b>当辅助目标</b>（共享向量，加一个预测表现的头）：份额口径、绝对口径、一维综合分、8 项加权，λ 从 3 扫到 100。结论一致：λ 小时向量几乎不动（座位分与基线相关 0.99），λ 大时胜负被拉坏，中间没有甜点；所有过护栏的配置冷门两半一致性都下降。归因：座位级标签噪声灌进向量，冷门对本来就靠噪声撑着，多一路梯度更不一致。</li>
+<li><b>当合成分标签</b>（IMP 式）：稳，但量的是"这个座位看起来多能刷"，预测未来胜负更差。</li>
+<li><b>当功劳权重</b>（按发挥分给每个座位的胜负梯度加权）：带输赢符号版本必然发散，数学上平衡点是 p=(1+βf)/2，一套总打出好数据的技能组会被估到 75% 胜率；去掉符号的对称版也漂移，因为"打得活跃"和"赢"在具体技能组上仍相关。<b>权重只要和这局结果有关联，估计就有偏。</b></li>
+<li><b>独立训纯表现模型</b>：能做到，但胜负模型的向量线性读出同样准，说明选人能决定的那部分表现胜负模型早已学到；两者是同一份信息的两种读法，融合扫描是纯取舍。</li>
+</ol>
+<div class="plain"><b>白话：</b>个人表现和胜负强相关是真的，但它不是第二个信息源。胜负模型已经把"这套技能会打成什么样"学进向量里了，再喂一遍只会带进噪声。分功劳这个直觉对，但按它改训练会让模型系统性偏向数据好看的技能组。</div>
+<h3>唯一没测的接法</h3>
+<p>把表现当<b>训练期输入特征</b>而不是标签：训练时喂每局座位的实际表现，推理时代入表现模型给的预期值。这样胜负估计仍无偏，而技能向量必须学会"这套技能的预期表现"才能用上这个输入。是否值得做，先看判错样本（<code>samples/</code> 两份 Excel）：输的一队是"数据打出来了但输了"（随机，做了也没用）还是"数据根本没打出来"（模型看错，值得做）。</p>
+
+<h2 id="s7">7 · 当前结论与待办</h2>
+<ul>
+<li><b>可以直接做的</b>：用扩数据基线（<code>model_comp_K96_lam10.0_b8_sgn_win_d.npz</code>）重训线上模型并部署。需要走完整导出链：<code>tools/export_model2</code> → 簇对 / 配比 / 归因 / 压缩 / g(n) 在新底座重跑 → <code>build-attr.py</code> → 回滚包 → 三处对拍。</li>
+<li>7.41e 15.4 万局（现役版本）并入：跨版本单件偏移需 <code>PATCHSPLIT=1</code>，先建 e 版本的测试段。</li>
+<li>冷门组合问题仍无解。剩余方向：人工标注扩样本（含被压低侧各 100 对）；MoE K=12 上线评估；表现当输入特征（上节）。</li>
+<li>取数三路守护都在腾讯云（<code>resume_wr2.sh</code> / <code>run_steam.sh</code> / <code>run_od.sh</code>），windrun 隧道断了要用户在自己电脑重开。</li>
+<li>别再试的清单在第五节所有<span class="tag no">败</span>行；另外：三元项、稀疏查表、κ 收缩、说明书当纠正、种子波动当保守分。</li>
+</ul>
+
+<h2 id="s8">8 · 怎么接手</h2>
+<h3>机器</h3>
+<ul>
+<li>研究全部在腾讯云 <code>43.130.62.185</code>（<code>/root/adres/research</code>），2 核 2 GB，只有 numpy 1.26 + scipy，无 sklearn，无 GPU。</li>
+<li><b>必须串行</b>，训练 <code>nice -n 19</code>；任何一次取整段嵌入 <code>e[seats[测试段]]</code> 约 1.3 GB 会触发 OOM（09-16 连 sshd 都被杀过），评估脚本按 4096 局分块。</li>
+<li>ssh 里 <code>pkill -f 名字</code> 会匹配到自己，用 <code>pkill -f "^python3 脚本名"</code> 精确匹配。</li>
+<li>线上服务 <code>/root/ad</code>（Node）；改 <code>server/</code> 要等房间空重启（<code>restart_when_empty.sh</code>），改静态文件即时生效。</li>
+</ul>
+<h3>复现一次实验（约 30 分钟）</h3>
+<pre><code>cd /root/adres/research
+# 1. 训基线（同 09-15 扩数据版）
+BENCH_PURE=data_pure_d.npz PERF_RAW=data_perf_raw_d.npz PERF_Z=data_perf_d.npz \
+  SIGNED=1 WITHIN=1 EXT_TAG=_d PATIENCE=6 nice -n 19 python3 exp_comp.py 96 40 8e-4 10.0 8
+# 2. 两半（冷门一致性要用）
+BENCH_PURE=data_pure_d_hA.npz PERF_RAW=data_perf_raw_d_hA.npz ... EXT_TAG=_hA_d ... ; 同理 hB
+# 3. 体检 + 记分卡
+HALF_NPZ=pairaudit/half_cmp_d.npz python3 model_checkup2.py &lt;基线tag&gt; &lt;新tag&gt;
+python3 eval_ext.py &lt;基线tag&gt; &lt;新tag&gt;; python3 consensus_pf.py &lt;基线tag&gt; &lt;新tag&gt;
+python3 scorecard.py &lt;基线tag&gt; &lt;新tag&gt;
+# 4. 座位分 vs 个人表现
+python3 seatcorr.py &lt;tag&gt; ...</code></pre>
+<p>每次队列的逐条记录在 <code>run_pf.log</code>；每个模型的训练曲线在 <code>pf_&lt;tag&gt;.log</code>，评测在 <code>result_&lt;tag&gt;.json</code>。</p>
+<h3>纪律</h3>
+<ul>
+<li>验收看记分卡不看 logloss 排名；一致性必须配兑现率一起看。</li>
+<li>比较两个模型一律先各自做截距校准（09-14 曾因此高估一次）。</li>
+<li>小样本（共现 &lt; 300）的结论要折半验证；从榜尾十个样本推规律曾误判过三次。</li>
+<li>新指标必须先在有统计力的子集上和胜负对过一次（IMP 的教训）。</li>
+</ul>
+
+<h2 id="s9">9 · 文件地图（共享目录）</h2>
+<div class="tbl"><table>
+<tr><th>路径</th><th>内容</th></tr>
+<tr><td><code>README.md</code>, <code>EXPERIMENT.md</code></td><td>08-29 数据源侦察与方案；实验契约（三条铁律、机器约束、已判负清单）</td></tr>
+<tr><td><code>doc_share/</code></td><td>三份方法论文档：半正定这道锁（09-04，最新）、ad_model（算法）、ad_stats（分段与原版强度），各 tex/pdf；RL 选技 AI 交接与方案</td></tr>
+<tr><td><code>bench.py</code>, <code>npcompat.py</code>, <code>perflabels.py</code></td><td>评测台、numpy 兼容层、表现标签口径</td></tr>
+<tr><td><code>exp_comp.py</code></td><td>主训练脚本（线上底座）；<code>exp_comp_pf.py / pf2.py</code> 09-15/16 表现监督与分功劳变体</td></tr>
+<tr><td><code>exp_perf_abs.py</code>, <code>exp_perf_abs2.py</code>, <code>perfabs/</code></td><td>纯表现模型（8 项 / 11 项），结果 json、两半一致性、读出对照、融合扫描、权重实验、判错样本 json</td></tr>
+<tr><td><code>model_*.npz</code>, <code>result_*.json</code>, <code>pf_*.log</code></td><td>53 个模型权重 / 48 份评测 / 训练曲线，tag 命名 <code>comp_K96_lam{λ}_b8_sgn[_win][_d][_pf口径][_cr β]</code></td></tr>
+<tr><td><code>checkup_*.log</code>, <code>eval_pf*.log</code>, <code>consensus_pf*.log</code>, <code>scorecard.py</code></td><td>体检表、稀有配合对账、人工共识、记分卡汇总</td></tr>
+<tr><td><code>pairaudit/</code></td><td>配合分对账：联合口径经验估计、安慰剂、枢纽三元、赢家诅咒、两半对比、MoE、人工标注合并表</td></tr>
+<tr><td><code>ctr_bench/RESULTS.md</code></td><td>克制轴四轮对照全档</td></tr>
+<tr><td><code>mcts/</code>, <code>draft_ai/</code></td><td>AI 选手：增量精确引擎、走子策略阶梯、自对弈</td></tr>
+<tr><td><code>abil/</code></td><td>技能说明书 190 维对照</td></tr>
+<tr><td><code>m1/</code>, <code>od/</code>, <code>steam/</code></td><td>队内表现空间 M1 与 IMP 复现；OpenDota / Steam 抓取输出</td></tr>
+<tr><td><code>samples/</code></td><td>09-16 两份判错样本 Excel</td></tr>
+<tr><td><code>run_pf*.sh</code>, <code>run_pf.log</code></td><td>各版队列脚本与逐条运行记录</td></tr>
+</table></div>
+
+<div class="foot">2026-09-16 整理。数据来源 windrun.io / Steam / OpenDota；模型与文档由项目自研。链接指向的目录是实时镜像，之后的新实验会自动出现在里面。</div>
+</div>
+
+</body></html>

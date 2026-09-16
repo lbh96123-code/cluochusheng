@@ -1,0 +1,410 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{xeCJK}
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+\xeCJKsetup{CJKmath=true}
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{geometry}
+\geometry{margin=2.4cm}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[colorlinks=true,linkcolor=brass,urlcolor=brass]{hyperref}
+\usepackage{fancyhdr}
+
+\definecolor{brass}{HTML}{8C6220}
+\definecolor{tealx}{HTML}{2E7A63}
+\definecolor{brick}{HTML}{AC5049}
+\definecolor{rulec}{HTML}{C8CFC9}
+\definecolor{mutedc}{HTML}{5C6A70}
+
+\titleformat{\section}{\normalfont\Large\bfseries\color{brass}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{0.7em}{}
+\setlist[itemize]{leftmargin=1.4em,itemsep=2pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=1.6em,itemsep=2pt,topsep=3pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\lhead{\small\color{mutedc}AD 选技胜负模型}
+\rhead{\small\color{mutedc}\thepage}
+
+\newcommand{\pos}[1]{\textcolor{tealx}{#1}}
+\newcommand{\negx}[1]{\textcolor{brick}{#1}}
+
+\begin{document}
+
+\begin{center}
+{\Huge\bfseries AD 选技胜负模型}\\[6pt]
+{\large\color{mutedc} Dota 2 Ability Draft —— 选完技能之后判谁赢}\\[10pt]
+{\small\color{mutedc} 线上模型 \texttt{multitask\_K96\_lam10.0\_win} \quad$\cdot$\quad 训练于 7.41d 补丁 466{,}091 局 \quad$\cdot$\quad 2026-09-02}
+\end{center}
+
+\vspace{4pt}
+\noindent\rule{\textwidth}{1pt}
+\vspace{6pt}
+
+\noindent 一个只看阵容、不看任何比赛过程的模型:给它 10 个座位、每个座位 1 个英雄本体加 4 个技能,它输出左方的获胜概率。这份文档写清楚它怎么打分、怎么训出来的,以及它在哪些地方靠不住。
+
+\vspace{8pt}
+\begin{center}
+\small
+\begin{tabular}{@{}p{2.3cm}p{2.3cm}p{2.3cm}p{2.4cm}p{2.1cm}p{2.2cm}@{}}
+\toprule
+\color{mutedc}训练对局 & \color{mutedc}AUC & \color{mutedc}logloss & \color{mutedc}信号提取率 & \color{mutedc}参数 & \color{mutedc}权重体积\\
+\midrule
+\textbf{466,091} 局 & \textbf{0.7546} & \textbf{0.5855} & \textbf{19.5\%} & \textbf{62,080} & \textbf{339} KB\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{6pt}
+\noindent\rule{\textwidth}{0.4pt}
+
+\tableofcontents
+\vspace{6pt}
+
+%==================================================
+\section{输入与硬约束}
+
+模型唯一能看到的是\textbf{10 个座位、每个座位 5 件东西的编号}。前 5 个座位是左方,后 5 个是右方。640 件东西里有 127 个英雄本体和 513 个技能 —— 本体和技能在模型眼里是同一类对象,共用一张表。
+
+明确禁止进入的东西:windrun 的公开胜率表、选取率、平均顺位、组合表;选技的先后顺序;玩家的 rating;以及任何赛后信息(击杀、经济、时长、出装)。最后一类尤其危险 —— 漏一个进去,AUC 能假涨到 0.9 以上。
+
+\subsection{反对称:一条不能违反的结构约束}
+
+把左右两队整体对调,模型给出的 logit 必须变号,概率必须翻转。这不是训出来的,是\textbf{由公式结构保证}的:所有项都写成"左边的量减右边的量"。
+\[
+z(A,B) + z(B,A) = 0
+\qquad\text{实测}\quad \max\bigl|z(A,B)+z(B,A)\bigr| = 4.77\times10^{-7}
+\]
+真实对局里天辉方常年有 53\%$\sim$54\% 的先手优势,训练时它被单独拟合成一个标量截距($+0.1116$)。但模拟器里没有天辉/夜魇,\textbf{这个截距在上线时被扔掉} —— 所以游戏里的左右完全对称。
+
+%==================================================
+\section{计分方法}
+
+每件东西带两样参数:一个\textbf{标量} $w_i$(它单独有多强)和一个 \textbf{96 维向量} $\mathbf{e}_i$(它和别的东西怎么配)。
+
+\subsection{三层公式}
+
+一个座位 $s$ 的分,等于它 5 件东西的主效应之和,加上这 5 件东西两两之间的配合:
+\[
+\mathrm{score}(s)\;=\;\underbrace{\sum_{i\in s} w_i}_{\text{单件强度}}\;+\;\underbrace{\sum_{i<j\,\in\, s}\langle \mathbf{e}_i,\mathbf{e}_j\rangle}_{\text{座位内 }C(5,2)=10\text{ 对配合}}
+\]
+整个局面的 logit 是 10 个座位的带符号求和,左方取 $+$、右方取 $-$:
+\[
+z \;=\; \sum_{s\in \text{左}}\mathrm{score}(s)\;-\;\sum_{s\in \text{右}}\mathrm{score}(s)
+\qquad\Longrightarrow\qquad
+P(\text{左赢}) \;=\; \frac{1}{1+e^{-z}}
+\]
+
+\subsection{为什么用内积,而不是每对给一个自由参数}
+
+513 个技能两两组合有 $\binom{513}{2}=131{,}328$ 对。如果每对一个自由参数,46 万局数据根本喂不动 —— 实测这些组合的中位共现只有 \textbf{151 次}。低秩内积把 13 万个参数压成 $640\times96=61{,}440$ 个,而且\textbf{没见过的组合也能算出来}:模型通过"和它相似的东西"把信息借过来。
+
+\subsection{实现:因子分解机恒等式}
+
+直接算 10 个内积是 $O(25K)$。用下面这个恒等式,一个座位只要扫一遍 5 件东西,变成 $O(5K)$:
+\[
+\sum_{i<j}\langle\mathbf{e}_i,\mathbf{e}_j\rangle
+\;=\;\tfrac{1}{2}\Bigl(\bigl\|\textstyle\sum_i \mathbf{e}_i\bigr\|^2-\sum_i\|\mathbf{e}_i\|^2\Bigr)
+\]
+展开成"和的平方减平方的和"。这一条让前端能在几毫秒内算完整局 —— 339 KB 权重直接下发到浏览器,\textbf{服务端不参与推理}。整条链路没有神经网络,只有查表、点积和一次 sigmoid。
+
+%==================================================
+\section{每件东西的评分}
+
+所谓"英雄评分"其实是两个互不替代的东西:
+
+\begin{center}
+\begin{tabular}{@{}llll@{}}
+\toprule
+参数 & 形状 & 它回答什么 & 怎么用\\
+\midrule
+$w$ & 640 & 这件东西单独有多强 & 直接相加\\
+$\mathbf{e}$ & $640\times96$ & 它和别的东西怎么配 & 两两做内积\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+关键在于\textbf{这 96 个维度没有人定义过}。没人告诉模型什么叫"远程"、什么叫"攻击特效",它是从 46.6 万局胜负里自己长出来的。查一下向量空间里的余弦近邻就能看出它学到了什么:
+
+\begin{center}
+\begin{tabular}{@{}p{3.2cm}p{10.4cm}@{}}
+\toprule
+查询 & 余弦最近的 6 个\\
+\midrule
+水刀 Tidebringer & 夺魂 $\cdot$ 海象punch $\cdot$ 衰退光环 $\cdot$ 灼热之刃 $\cdot$ Jinada $\cdot$ 月刃\newline{\small\color{mutedc}全是普攻强化}\\
+\addlinespace[3pt]
+先知(本体) & 火枪 $\cdot$ 米拉娜 $\cdot$ 天穹守望者 $\cdot$ 冥界亚龙 $\cdot$ 森海飞霞 $\cdot$ 风行者\newline{\small\color{mutedc}全是远程}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+这正是模型能给"只出现过 157 次"的组合打分的原因 —— 它从火枪$\times$水刀、卓尔$\times$水刀这些样本里把信息借了过来。这套机制和 NLP 里的词向量是同一个数学家族。
+
+\medskip
+\noindent\fcolorbox{brass}{white}{\parbox{0.97\textwidth}{\small
+\textbf{\color{brass}但要小心。} 借力是双刃剑。$\langle\text{先知},\text{水刀}\rangle$ 模型给 $+0.243$ 看起来很确定,可它背后只有 157 个真实样本,置信区间宽到没法用。\textbf{排序可以信,具体数值不能当真。}}}
+
+%==================================================
+\section{训练方法}
+
+\subsection{数据与切分}
+
+46.6 万局 7.41d 补丁的真实对局,来自 windrun,用 OpenDota 产的随机 match\_id 做无偏种子再滚雪球采集。按开局时间排序后切分,\textbf{绝不随机洗牌} —— 补丁会漂移,同一个玩家的多局也会串。
+
+\begin{center}
+\begin{tabular}{@{}lrr l@{}}
+\toprule
+& 时间区间 & 局数 & 用途\\
+\midrule
+训练 & $[0,\,0.80)$ & 372,872 & 拟合参数\\
+验证 & $[0.80,\,0.85)$ & 23,305 & 只用来早停和选超参\\
+测试 & $[0.85,\,1.00)$ & 69,914 & 最后碰一次\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{核心:多任务辅助监督}
+
+胜负标签每局只给 \textbf{1 bit},而 640 件东西要学出几十个独立概念 —— 监督信号严重不足。解法是训练时让同一套表示\textbf{额外预测 10 个人各自的表现}:
+\[
+\mathcal{L} \;=\; \underbrace{\mathrm{BCE}(\hat{y},\,y_{\text{胜负}})}_{\text{推理只用这个头}}\;+\;\lambda\cdot\underbrace{\mathrm{MSE}(\hat{\mathbf{p}},\,\mathbf{p}_{\text{表现}})}_{\text{训完就扔}},\qquad \lambda=10
+\]
+两个头共享同一套 $w$ 和 $\mathbf{e}$。8 个表现指标是:gpm、xpm、每分钟补刀、伤害占本队份额、治疗份额、KDA、击杀参与率、死亡占比。
+
+监督密度从每局 1 bit 变成 $10\text{ 座位}\times 8\text{ 个连续实数}$。而每个座位的表现主要由\textbf{这个座位自己那 5 件东西}决定,所以辅头给的是定位到座位的监督。
+
+\medskip
+这和一个被判负的思路必须区分开。\textbf{中介法}(draft $\to$ 表现 $\to$ 胜负)让表现成为唯一通路,信息只会丢 —— 实测同特征下 AUC 完全相等,高维下反而更差。\textbf{多任务}把表现放在旁路,只贡献梯度,不挡信息。
+
+\subsection{辅助损失要做局内中心化}
+\[
+r \;\leftarrow\; r - \frac{1}{10}\sum_{s=1}^{10} r_s
+\qquad\text{(残差 }r=\hat{p}-p\text{,在这一局的 10 个座位上减掉均值)}
+\]
+不减的话,模型会分容量去猜"这局节奏多快" —— 那是对局属性,draft 根本决定不了,纯属浪费。改成局内口径后,胜负分几乎没变($60.7\to60.8$),但"谁能打"的判断分从 48.6 涨到 \textbf{55.1}。
+
+\subsection{$\lambda$ 是倒 U 形,而且这就是安全阀}
+
+\begin{center}
+\begin{tabular}{@{}rrrl@{}}
+\toprule
+$\lambda$ & logloss & 早停轮次 & \\
+\midrule
+0 & 0.5889 & 7 / 16 & 辅头关闭,退化成基线\\
+1 & 0.5882 & 11 / 16 & \\
+3 & 0.5873 & 19 / 40 & $K=32$ 时的最优\\
+\textbf{10} & \textbf{0.5855} & \textbf{17 / 40} & $K=96$ 时的最优,\textbf{线上用的就是这个}\\
+30 & \negx{0.6252} & 39 / 40 & \negx{崩了} —— 喧宾夺主\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+$\lambda$ 由\textbf{验证集的胜负 logloss} 挑,不看辅助损失。所以最坏情况是 $\lambda\to0$ 退回基线,\textbf{结构上不可能被辅助任务带偏} —— $\lambda=30$ 那次就是当场被抓出来的实例。
+
+\subsection{辅助监督解锁了容量}
+
+在此之前\textbf{每一次加容量都过拟合}:自注意力、DeepSets、$K=64$ 全部比基线更差。加上密集监督之后,维度一路加到 96 还在往下走:
+\[
+K=32:\;0.5882 \quad\longrightarrow\quad K=64:\;0.5873 \quad\longrightarrow\quad K=96:\;\mathbf{0.5855}
+\]
+单调下降,没有拐头。
+
+\subsection{优化细节}
+\begin{itemize}
+\item 手写 Adam,batch 2048,学习率 $8\times10^{-4}$,权重衰减解耦。
+\item 嵌入的学习率必须\textbf{远小于}线性部分 —— 协同项是 $\mathbf{e}$ 的二次型,学习率一大 $\|\mathbf{e}\|$ 涨起来会把 logit 顶出量程,表现是 AUC 还行但 logloss 崩掉(排序对、概率全错)。
+\item 按验证集 \textbf{logloss} 早停,不看 AUC —— 我们要的是概率,不是硬分类。
+\item 所有手推的梯度都过\textbf{有限差分自检},且必须在 float64 下做:梯度被 batch 归一化压到 $10^{-6}$ 量级,float32 的损失只有 $\sim10^{-7}$ 精度,差分测到的全是浮点噪声。
+\item 纯 numpy,无 GPU、无框架。scatter-add 用 \texttt{bincount} 重写,比 \texttt{np.add.at} 快 2.9 倍。
+\end{itemize}
+
+%==================================================
+\section{怎么验证的}
+
+28 个实验跑下来,判定标准比模型本身更重要。
+
+\subsection{主指标是 logloss,不是准确率}
+
+游戏结算页显示的是"左 63\%"这样的概率,所以要的是概率准,不是分类对。再用 \textbf{Murphy 分解}把 Brier 拆开,直接读出模型抽出了多少信号:
+\[
+\underbrace{0.2007}_{\text{Brier}}\;=\;\underbrace{0.2490}_{\text{不确定性(天花板)}}\;-\;\underbrace{0.0485}_{\text{分辨力(抽出的信号)}}\;+\;\underbrace{0.00043}_{\text{可靠性(校准误差)}}
+\]
+\[
+\text{信号提取率} \;=\; \frac{0.0485}{0.2490} \;=\; \mathbf{19.5\%}
+\]
+比 AUC 好懂得多:\textbf{draft 解释了胜负 19.5\% 的方差},剩下 80\% 是操作、分路、心态、掉线。
+
+\subsection{校准:说 72\% 的时候是不是真的 72\%}
+
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+  width=7.2cm, height=6.4cm,
+  xlabel={模型预测的胜率}, ylabel={实际胜率},
+  xmin=0.05, xmax=1.0, ymin=0.05, ymax=1.0,
+  grid=both, grid style={rulec!60, very thin},
+  tick label style={font=\scriptsize}, label style={font=\small},
+  title={\small 预测 vs 实际}, title style={font=\small},
+]
+\addplot[dashed, rulec!140, thick, forget plot] coordinates {(0.05,0.05) (1.0,1.0)};
+\addplot[brass, thick, mark=*, mark size=1.5] coordinates {
+ (0.128,0.150) (0.252,0.276) (0.346,0.367) (0.430,0.432) (0.509,0.511)
+ (0.584,0.572) (0.659,0.639) (0.733,0.707) (0.810,0.780) (0.906,0.885)};
+\end{axis}
+\end{tikzpicture}
+\hspace{6pt}
+\begin{tikzpicture}
+\begin{axis}[
+  width=7.2cm, height=6.4cm,
+  xlabel={十个概率档,从低到高}, ylabel={偏差 = 实际 $-$ 预测},
+  xmin=0.3, xmax=10.7, ymin=-0.04, ymax=0.04,
+  ybar, bar width=8pt,
+  xtick={1,...,10}, tick label style={font=\scriptsize}, label style={font=\small},
+  grid=both, grid style={rulec!60, very thin},
+  title={\small 偏差(放大看)}, title style={font=\small},
+]
+\addplot[fill=tealx, draw=tealx] coordinates {(1,0.022) (2,0.024) (3,0.021) (4,0.002) (5,0.003)};
+\addplot[fill=brick, draw=brick] coordinates {(6,-0.012) (7,-0.020) (8,-0.026) (9,-0.030) (10,-0.020)};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+
+\noindent{\small 测试集 69,914 局按预测概率分十档,每档约 6,991 局。左图几乎压在对角线上;右图把偏差放大后才看得出结构:\pos{低概率档模型偏保守}(说 12.8\%,实际赢了 15.0\%),\negx{高概率档偏乐观}(说 81.0\%,实际 78.0\%)。最大偏差 \textbf{0.030},所以结算页可以把数字原样显示给玩家。}
+
+\subsection{三道门禁}
+\begin{enumerate}
+\item \textbf{反对称自检} —— 左右对调 logit 必须变号,超过 $10^{-3}$ 结果直接作废。
+\item \textbf{配对 bootstrap $+$ Bonferroni} —— logloss 逐样本可加,两个模型在同一批样本上做配对检验。跑了 28 个实验,阈值抬到 $|t|>3.02$ 才算显著;试得够多,总有一个"看起来赢了"。
+\item \textbf{未来验收集} —— 抓取训练期之后新产生的 7,919 局。\textbf{这批对局在做任何实验时都还不存在},所以排名不受多重比较污染。
+\end{enumerate}
+
+\medskip
+\noindent\fcolorbox{brass}{white}{\parbox{0.97\textwidth}{\small
+\textbf{\color{brass}验收集抓到了什么。} 老测试集上唯一"确证有效"的关系分型嵌入($t=4.23$),在验收集上只剩 $+0.00017$、$t=0.10$ —— \textbf{基本回到基线}。这大概率就是多重比较的产物,而这正是当初设计验收集要抓的东西。
+
+同时,崩掉的 $\lambda=30$ 在验收集上是 $t=-9.86$,说明这套检验\textbf{有能力发现真实的大效应} —— 它没抓到我们的改进,是因为改进幅度确实小(0.0024),小于 7,919 局的分辨能力(0.0099)。}}
+
+%==================================================
+\section{水平与天花板}
+
+\begin{center}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+模型 & AUC & logloss & 说明\\
+\midrule
+常数(按基准胜率猜) & 0.5000 & 0.690 & 下限\\
+纯 ID 基线($K=32$ FM) & 0.7504 & 0.5883 & 靶子\\
+\textbf{多任务 $K=96$ + 局内损失} & \textbf{0.7546} & \textbf{0.5855} & \textbf{线上就是这个}\\
+10 模型融合 & 0.7580 & 0.5814 & 未上线(权重太大)\\
+参考:用 windrun 全套外部表 & 0.7587 & 0.5811 & 纯 ID 已基本追平\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+最后一行值得注意:\textbf{"只用游戏内数据"这个约束的代价已经接近于零}。46.6 万局足够把 windrun 那 8 张统计表里的信息自己学出来。
+
+\subsection{天花板在哪}
+
+用\textbf{同一套配置在不同对局里重复出现}的方式可以直接量出上限 —— 同样的英雄配同样的技能,换一局打,表现差多少是纯波动:
+
+\begin{center}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+指标 & 配置能解释 & 纯波动\\
+\midrule
+每分钟补刀 & \pos{53.1\%} & 46.9\%\\
+治疗份额 & \pos{40.9\%} & 59.1\%\\
+gpm & 28.9\% & 71.1\%\\
+伤害占比 & 24.3\% & 75.7\%\\
+KDA & \negx{8.4\%} & 91.6\%\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+补刀和治疗几乎由技能决定,KDA 则 \textbf{91.6\% 是运气}。这解释了为什么胜负的信号提取率只有 19.5\% —— 不是模型不行,是这件事本身就只有这么多可预测的部分。
+
+\subsection{错在哪:是判断错,还是没打出来}
+
+辅头顺带给了一个诊断能力。把测试集按"模型说谁强"和"实际谁打得好"交叉切开:
+
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+情形 & 局数 & 占比 & 胜负方向准确率\\
+\midrule
+判断与实际表现一致 & 47,459 & 67.9\% & \pos{97.0\%}\\
+两者不一致 & 22,455 & 32.1\% & \negx{8.2\%}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+同样是"我们说左边强":左边真打出来了就赢 \textbf{97.6\%},没打出来只赢 \textbf{9.3\%}。也就是说,\textbf{我们的错误几乎全部来自"判断对了但没打出来",而不是"判断错了"}。
+
+%==================================================
+\section{已知的局限}
+
+\subsection{协同其实只有两根轴}
+
+把学到的协同矩阵做奇异值分解,\textbf{第一主轴占 72\%},前两轴占八成。这两根轴大致是:
+\begin{itemize}
+\item 身板轴 —— 这个身板好不好用 $\times$ 这个技能有多挑身板;
+\item 流派轴 —— 普攻流 $\leftrightarrow$ 法系爆发。
+\end{itemize}
+所以"这两个技能专门互相成全"这种更细的结构,目前只活在剩下 20\% 的方差里,很弱。\textbf{而且这不是数据不够造成的假象} —— 数据从 4.6 万涨到 18 万时第一主轴占比反而从 35\% 升到 79\%,说明模型是在向真实的主导结构收敛。
+
+\subsection{跨队克制学不出来}
+
+"沉默克法系"这类跨队相互作用,在 15.5 万 / 23.9 万 / 46.6 万三个数据量上各试一次,\negx{三次全负},每次都比不加更差。判断的原因:AD 双方是从\textbf{同一个 60 件池子}里选的,"我方有 A、敌方有 B"和"这池子里有 A 和 B"高度共线,信号被结构性地稀释了。
+
+\subsection{没有队伍层面的构成概念}
+
+logit 是 10 个座位\textbf{线性相加}的,所以"左边五个都是物理输出"这件事模型看不见。两个独立测法(嵌入相似度、伤害类型集中度)都显示同质化确实吃亏、方向一致,但幅度都在噪声里($t=0.62$ 和 $2.65$,后者过不了 3.02 的阈值)。
+
+\subsection{位置标签拿不到}
+
+OpenDota 的 \texttt{lane\_role} 只在\textbf{已解析录像}的对局里有,批量表查不到,只能走单局 API(限速 2000/日)。要给 46.6 万局补齐得跑 233 天。而且 AD 里位置是选完技能之后才定的 —— 它更像 draft 的\emph{结果}而不是原因。
+
+%==================================================
+\section{一局实例拆解}
+
+线上真实对局,模型判 左 21.1\% : 78.9\% 右。
+
+\begin{center}
+\begin{tabular}{@{}p{3.3cm}rrp{6.4cm}@{}}
+\toprule
+座位 & 总分 & 单件 / 配合 & 五件东西\\
+\midrule
+\textbf{右5}\newline{\small\color{mutedc}决定这局的位置} & \pos{$+1.00$} & $-0.70$ / $+1.70$ & 德鲁伊(本体) $\cdot$ 分裂箭 $\cdot$ 灵魂链接 $\cdot$ 纠缠 $\cdot$ 并列\\
+\addlinespace[4pt]
+\textbf{左2}\newline{\small\color{mutedc}左边最好的位置} & \pos{$+0.53$} & $-0.15$ / $+0.68$ & 瘟疫法师(本体) $\cdot$ 查克拉 $\cdot$ 死亡脉冲 $\cdot$ 心脏骤停光环 $\cdot$ 死神镰刀\\
+\addlinespace[4pt]
+\textbf{左5}\newline{\small\color{mutedc}最拖后腿} & \negx{$-0.54$} & $-0.49$ / $-0.05$ & 幻影长矛手(本体) $\cdot$ 幻影长矛 $\cdot$ 幻影突袭 $\cdot$ 嗜血术 $\cdot$ 虚妄之诺\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+右5 这个座位最能说明模型在看什么:\textbf{五件东西单看全是负的}(合计 $-0.70$),但两两配合加起来 \textbf{$+1.70$} —— 分裂箭、并列、纠缠、灵魂链接是一整套幻象与攻击特效的连锁。模型把它判成全场最强的位置,而它的价值完全来自"凑在一起"。
+
+对照左5:幻影长矛手配了嗜血术和虚妄之诺,单件已经很差($-0.49$),配合还是负的 —— 五件东西互相不搭,这就是模型认为最差的形态。
+
+\medskip
+\noindent\fcolorbox{brass}{white}{\parbox{0.97\textwidth}{\small
+\textbf{\color{brass}怎么读这些数字。} 座位分不是胜率。最终 logit 是 10 个座位相减,双方会大量抵消 —— 单看一个座位的 $+1.00$ 会严重高估它对胜率的贡献。真正的口径是 $\mathrm{sigmoid}(\text{左方总分}-\text{右方总分})$。}}
+
+\vfill
+\noindent\rule{\textwidth}{0.4pt}\\
+{\footnotesize\color{mutedc}
+线上模型 \texttt{multitask\_K96\_lam10.0\_win},训练于 7.41d 补丁 466,091 局。权重导出成 62,080 个 float32(339 KB)随页面下发,浏览器本地计算,服务端不参与推理。JS 与 Python 实现逐样例对拍,logit 最大差 $5.35\times10^{-7}$;反对称 $2.2\times10^{-16}$。\\
+在线版: \url{https://claude.ai/code/artifact/6e87a495-861d-4bfc-89ab-c78f3fb850c1}}
+
+\end{document}

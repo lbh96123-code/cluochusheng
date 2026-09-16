@@ -1,0 +1,292 @@
+<title>半正定这道锁</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Noto+Sans+SC:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F5F6F7; --surface:#FFFFFF; --sunk:#ECEEF0;
+  --ink:#14181C; --ink2:#3B434B; --muted:#69737D; --faint:#98A1AA;
+  --rule:#DCE0E4; --rule2:#C2C8CE;
+  --acc:#25607F; --acc-soft:#E1EBF1;
+  --pos:#2E7D5B; --neg:#B0472E;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#111417; --surface:#181C20; --sunk:#0C0F11;
+    --ink:#E6E9EC; --ink2:#C0C7CD; --muted:#8B949C; --faint:#69727A;
+    --rule:#262C31; --rule2:#39424A;
+    --acc:#6FB3D2; --acc-soft:#16303D;
+    --pos:#63BC93; --neg:#DC8467;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#111417; --surface:#181C20; --sunk:#0C0F11;
+  --ink:#E6E9EC; --ink2:#C0C7CD; --muted:#8B949C; --faint:#69727A;
+  --rule:#262C31; --rule2:#39424A;
+  --acc:#6FB3D2; --acc-soft:#16303D;
+  --pos:#63BC93; --neg:#DC8467;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);margin:0;
+  font-family:"Noto Sans SC",system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.85;
+  -webkit-font-smoothing:antialiased}
+.page{max-width:960px;margin:0 auto;padding:0 24px 96px}
+.mono{font-family:"Roboto Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+header{padding:64px 0 26px;border-bottom:1px solid var(--rule)}
+.kick{font-family:"Roboto Mono",monospace;font-size:11px;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--acc);margin:0 0 14px}
+h1{font-family:"Spectral","Noto Serif SC",Georgia,serif;font-weight:600;
+  font-size:clamp(30px,5.2vw,48px);line-height:1.12;margin:0 0 16px;text-wrap:balance;letter-spacing:-.01em}
+.lede{max-width:38rem;color:var(--ink2);font-size:16.5px;margin:0}
+.meta{margin:22px 0 0;display:flex;flex-wrap:wrap;gap:4px 24px;
+  font-family:"Roboto Mono",monospace;font-size:11.5px;color:var(--muted)}
+.meta b{color:var(--ink2);font-weight:500}
+
+section{padding-top:56px}
+h2{font-family:"Spectral","Noto Serif SC",serif;font-weight:600;font-size:25px;line-height:1.25;
+  margin:0 0 5px;text-wrap:balance}
+h2 .num{font-family:"Roboto Mono",monospace;font-size:13px;color:var(--acc);
+  margin-right:11px;font-weight:400;vertical-align:2px}
+.sub{color:var(--faint);font-family:"Roboto Mono",monospace;font-size:12px;margin:0 0 22px}
+h3{font-family:"Spectral","Noto Serif SC",serif;font-weight:600;font-size:17.5px;margin:32px 0 8px}
+p{max-width:38rem;margin:0 0 16px;color:var(--ink2)}
+strong{color:var(--ink);font-weight:700}
+code{font-family:"Roboto Mono",monospace;font-size:.87em;background:var(--sunk);
+  padding:1px 5px;border-radius:3px;color:var(--ink2)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+
+pre{font-family:"Roboto Mono",monospace;font-size:12.5px;line-height:1.8;margin:0;
+  white-space:pre;color:var(--ink)}
+.box{background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  padding:16px 18px;margin:0 0 18px;overflow-x:auto}
+.box.lead{border-left:3px solid var(--acc)}
+.box figcaption{color:var(--muted);font-size:12.5px;line-height:1.7;margin-top:12px;
+  padding-top:10px;border-top:1px dashed var(--rule)}
+
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--surface);margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+th{font-family:"Roboto Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);font-weight:400;text-align:right;padding:9px 13px;
+  background:var(--sunk);border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{text-align:left}
+td{padding:9px 13px;text-align:right;border-bottom:1px solid var(--rule);
+  font-family:"Roboto Mono",monospace;font-variant-numeric:tabular-nums}
+td:first-child{font-family:"Noto Sans SC",sans-serif}
+tbody tr:last-child td{border-bottom:0}
+tr.hi td{background:var(--acc-soft)}
+
+.note{border:1px solid var(--rule);border-top:2px solid var(--acc);border-radius:3px;
+  background:var(--surface);padding:17px 20px;margin:0 0 18px;max-width:42rem}
+.note p:last-child{margin-bottom:0}
+.note .lb{font-family:"Roboto Mono",monospace;font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--acc);display:block;margin-bottom:8px}
+
+figure{margin:0 0 18px}
+figure svg{display:block;width:100%;height:auto}
+figcaption{color:var(--muted);font-size:12.5px;line-height:1.7;margin-top:11px;max-width:38rem}
+
+ul{max-width:38rem;padding-left:20px;margin:0 0 16px;color:var(--ink2)}
+li{margin-bottom:7px}
+footer{margin-top:72px;padding-top:20px;border-top:1px solid var(--rule);
+  color:var(--faint);font-size:12.5px;max-width:42rem}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="page">
+<header>
+  <p class="kick">Dota 2 Ability Draft · 胜负预测模型</p>
+  <h1>半正定这道锁</h1>
+  <p class="lede">找了一年多的瓶颈,原来不在数据量、不在容量、也不在优化器 —— 是模型公式里一个没人注意的数学性质,它让模型在结构上说不出"同类堆在一起反而更差"。解开之后,一次拿到的提升超过此前所有改动的总和。</p>
+  <div class="meta">
+    <span>训练数据 <b>466,091 局</b>(7.41d)</span>
+    <span>线上 <b>43.130.62.185/ad/</b></span>
+    <span>2026-09-04</span>
+  </div>
+</header>
+
+<section>
+  <h2><span class="num">01</span>结论</h2>
+  <p class="sub">先说结果,推导在后面</p>
+  <div class="tw"><table>
+    <thead><tr><th>模型</th><th>方向判对</th><th>logloss</th><th>AUC</th><th>配对 t</th></tr></thead>
+    <tbody>
+      <tr><td>改动前(线上原版)</td><td>68.74%</td><td>0.58549</td><td>0.7546</td><td>—</td></tr>
+      <tr><td>+ 队伍构成项</td><td>68.96%</td><td>0.58378</td><td>0.7565</td><td>+7.79</td></tr>
+      <tr><td>+ 配合项切半</td><td>69.31%</td><td>0.57909</td><td>0.7609</td><td>+9.43</td></tr>
+      <tr class="hi"><td>+ 跨队克制项</td><td><strong>69.52%</strong></td><td><strong>0.57733</strong></td><td><strong>0.7627</strong></td><td><strong>+11.45</strong></td></tr>
+    </tbody>
+  </table></div>
+  <p>三项各自独立显著(Bonferroni 阈值 |t| &gt; 3.02),可叠加。合计 logloss <span class="mono">−0.00816</span>,在 69,914 局留出测试集上多判对 <strong>545 局</strong>。</p>
+  <p>作为尺度参照:瞎猜的 logloss 是 0.693,改动前的模型是 0.5855 —— 模型全部的本事是 0.1075。这一轮又挣了 0.0082,相当于<strong>把已有功力再抬了 7.6%</strong>。</p>
+</section>
+
+<section>
+  <h2><span class="num">02</span>那道锁</h2>
+  <p class="sub">e·eᵀ 恒半正定 —— 这不是训练结果,是写法本身决定的</p>
+  <p>原来的配合项是每件东西一个向量,两两点积:</p>
+  <div class="box lead"><pre>座位配合 = Σ<sub>i&lt;j</sub> ⟨e_i , e_j⟩ = ½(‖Σe‖² − Σ‖e‖²)</pre></div>
+  <p>单个配对当然可以是负的 —— 实测 204,480 个物品对里 <strong>42.3% 为负</strong>,最负 −0.5077(血魔本体 × 大圣归来)。所以"模型不能说两个东西互相拖累"是错的。</p>
+  <p>被锁死的是另一件事:<code>‖Σe‖² ≥ 0</code> 是硬约束,于是<strong>一组彼此相似的东西,总配合必定为正</strong>。</p>
+  <div class="box">
+    <pre>把同一件东西放 5 份(极端的"同类扎堆"):
+
+  对称 FM   syn = 10‖e‖²        为负的 <span class="neg">0 / 640</span> 件 —— 数学上不可能
+  允许负后                       为负的 <span class="pos">165 / 640</span> 件,最负 −2.452</pre>
+    <figcaption>放 5 份是数学装置(AD 里每个技能只有一个),它测的是"这个方向上同类扎堆赚不赚"。对称写法下这个数是平方和,永远为正。</figcaption>
+  </div>
+  <p>而这正是需要表达的东西。从 46.6 万局里挑出<strong>同座位共现 ≥200 次、两种写法判断相反</strong>的技能对,共 117 组:</p>
+  <div class="tw"><table>
+    <thead><tr><th>技能 A</th><th>技能 B</th><th>对称给</th><th>允许负后</th><th>共现</th></tr></thead>
+    <tbody>
+      <tr><td>死亡脉冲</td><td>自然之助</td><td class="pos">+0.314</td><td class="neg">−0.028</td><td>282</td></tr>
+      <tr><td>暗影波</td><td>自然之助</td><td class="pos">+0.252</td><td class="neg">−0.063</td><td>203</td></tr>
+      <tr><td>锚击</td><td>大圣归来</td><td class="pos">+0.385</td><td class="neg">−0.020</td><td>312</td></tr>
+      <tr><td>腐烂</td><td>竭心光环</td><td class="pos">+0.355</td><td class="neg">−0.021</td><td>942</td></tr>
+      <tr><td>神之谴戒</td><td>星破天惊</td><td class="pos">+0.263</td><td class="neg">−0.026</td><td>764</td></tr>
+    </tbody>
+  </table></div>
+  <p>前两组都是<strong>两个范围治疗</strong>放同一个座位 —— 血线该救得回来的一个就够。对称写法必须给正分,因为治疗类技能的向量彼此相近,而"相近"在点积下就是"高分"。</p>
+
+  <h3>一个三方对照</h3>
+  <p>月刃(弹射)、衰退光环(加攻击力)、灵能之刃(穿透)。两种写法的排序<strong>完全相反</strong>,而实测站在后者一边:</p>
+  <div class="tw"><table>
+    <thead><tr><th>技能对</th><th>余弦(像不像)</th><th>对称给</th><th>允许负后</th><th>共现</th><th>实测残差</th></tr></thead>
+    <tbody>
+      <tr><td>月刃 × 灵能之刃</td><td>+0.608</td><td>+0.465</td><td>+0.056</td><td>162</td><td class="neg">−0.0471</td></tr>
+      <tr><td>月刃 × 衰退光环</td><td>+0.502</td><td>+0.429</td><td>+0.132</td><td>231</td><td>−0.0051</td></tr>
+      <tr><td>衰退光环 × 灵能之刃</td><td>+0.418</td><td>+0.295</td><td>+0.154</td><td>297</td><td class="pos">+0.0394</td></tr>
+    </tbody>
+  </table></div>
+  <p>对称写法里"余弦"和"配合"是同一个数,所以两列必然同序 —— 它说月刃+灵能之刃最配。但这两个都是"让一次普攻打到更多目标"的机制,功能重叠;衰退光环是加攻击力,和它们不在一个层面,能乘上去。<strong>实测残差的方向和后者一致。</strong></p>
+</section>
+
+<section>
+  <h2><span class="num">03</span>决定性对照</h2>
+  <p class="sub">缺的是结构,不是参数</p>
+  <p>把参数量和"是否允许负特征值"拆成两个维度,各跑一遍,验证集 logloss:</p>
+  <figure>
+    <svg viewBox="0 0 640 258" role="img" aria-label="2×2 对照:横向允许负带来 0.0064 提升,纵向参数翻倍只有 0.0001">
+      <g font-family="Roboto Mono, monospace" font-size="11">
+        <text x="150" y="22" text-anchor="middle" font-size="11.5" fill="var(--muted)">只能加分(半正定)</text>
+        <text x="420" y="22" text-anchor="middle" font-size="11.5" fill="var(--muted)">允许减分(不定)</text>
+        <text x="18" y="78" text-anchor="middle" font-size="11.5" fill="var(--muted)"
+          transform="rotate(-90 18 78)">61,440 参数</text>
+        <text x="18" y="180" text-anchor="middle" font-size="11.5" fill="var(--muted)"
+          transform="rotate(-90 18 180)">122,880 参数</text>
+
+        <rect x="42" y="36" width="216" height="82" rx="3" fill="var(--surface)" stroke="var(--rule2)"/>
+        <text x="150" y="66" text-anchor="middle" font-size="12" fill="var(--muted)">对称 K=96(原版)</text>
+        <text x="150" y="97" text-anchor="middle" font-size="24" fill="var(--ink)">0.5807</text>
+
+        <rect x="312" y="36" width="216" height="82" rx="3" fill="var(--acc-soft)" stroke="var(--acc)" stroke-width="1.5"/>
+        <text x="420" y="66" text-anchor="middle" font-size="12" fill="var(--muted)">切半 K=96</text>
+        <text x="420" y="97" text-anchor="middle" font-size="24" fill="var(--acc)">0.5743</text>
+
+        <rect x="42" y="138" width="216" height="82" rx="3" fill="var(--surface)" stroke="var(--rule2)"/>
+        <text x="150" y="168" text-anchor="middle" font-size="12" fill="var(--muted)">对称 K=192</text>
+        <text x="150" y="199" text-anchor="middle" font-size="24" fill="var(--ink)">0.5806</text>
+
+        <rect x="312" y="138" width="216" height="82" rx="3" fill="var(--surface)" stroke="var(--rule2)"/>
+        <text x="420" y="168" text-anchor="middle" font-size="12" fill="var(--muted)">两张表 p/q d=96</text>
+        <text x="420" y="199" text-anchor="middle" font-size="24" fill="var(--ink)">0.5742</text>
+
+        <path d="M266 77 H304" stroke="var(--acc)" stroke-width="1.6" marker-end="url(#ar)"/>
+        <text x="285" y="70" text-anchor="middle" font-size="11" fill="var(--acc)">−0.0064</text>
+        <path d="M150 126 V132" stroke="var(--rule2)" stroke-width="1.6" marker-end="url(#ar2)"/>
+        <text x="196" y="132" text-anchor="middle" font-size="11" fill="var(--muted)">−0.0001</text>
+        <path d="M420 126 V132" stroke="var(--rule2)" stroke-width="1.6" marker-end="url(#ar2)"/>
+        <text x="466" y="132" text-anchor="middle" font-size="11" fill="var(--muted)">−0.0001</text>
+
+        <text x="285" y="243" text-anchor="middle" font-size="11.5" fill="var(--ink2)">横向 −0.0064　　纵向 −0.0001</text>
+      </g>
+      <defs>
+        <marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="var(--acc)"/></marker>
+        <marker id="ar2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill="var(--rule2)"/></marker>
+      </defs>
+    </svg>
+    <figcaption>参数翻倍在两种结构下都只值 0.0001;允许减分在两种参数量下都值 0.0064。<strong>提升 100% 来自结构。</strong></figcaption>
+  </figure>
+  <div class="note">
+    <span class="lb">这条对照解释了之前所有的失败</span>
+    <p>自注意力、DeepSets、K=64、K=192、跨队自由参数 —— 之前一年多试过的东西,加的全是<strong>容量</strong>,而缺的从来不是容量。每次都过拟合退回基线,现在知道为什么了。</p>
+  </div>
+
+  <h3>最终选的实现</h3>
+  <p>既然不是容量问题,就不用加参数。把 96 维切一半,后一半的点积取负:</p>
+  <div class="box lead"><pre>配合(i,j) = Σ<sub>k=1..48</sub> e_ik·e_jk  <span class="pos">−</span>  Σ<sub>k=49..96</sub> e_ik·e_jk
+
+参数 640×96 = 61,440,一个不加 · 权重文件大小不变 · 前端改一行</pre>
+    <figcaption>符号是写死的不是学的,所以反传只多一个逐维乘法。全 +1 时退化回原式,是同一份实现。</figcaption>
+  </div>
+  <p>切半 K=96 的验证 <span class="mono">0.5743</span>,和参数翻倍的两张表版本 <span class="mono">0.5742</span> 打平,测试段还略好一点(0.5791 vs 0.5795)。</p>
+</section>
+
+<section>
+  <h2><span class="num">04</span>另外两个模块</h2>
+  <p class="sub">同一个现象,三个不同的尺度</p>
+  <p>「同类堆在一起会内耗」这件事在三个层面各发生一次,而原模型三个都表达不了 —— 它是 10 个座位的线性相加,座位内又被半正定锁住。</p>
+  <div class="tw"><table>
+    <thead><tr><th>模块</th><th>层面</th><th>参数</th><th>实测缺口</th></tr></thead>
+    <tbody>
+      <tr><td>配合项切半</td><td>座位内 5 件</td><td>0(不加)</td><td>见上</td></tr>
+      <tr><td>队伍构成项</td><td>队伍内 5 座位</td><td>9</td><td>4 个打钱位比 1 个低 <span class="neg">6.7pp</span>,t=−13.9</td></tr>
+      <tr><td>跨队克制项</td><td>我方 vs 敌方</td><td>9,600</td><td>整体超零模型 +10.5%,z=+14.4</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>队伍构成项</strong>是一条 8 段分段线性:按队伍打钱分总和查表。实测的形状是倒 U —— 一个打钱位都没有也吃亏(−0.0188),1~2 个最好,4 个 −0.0650。上线后这条残差从 t=−5.36 压到 t=−1.47。</p>
+  <p><strong>跨队克制项</strong>用 15 条冻结轴描述敌方阵容(力/敏/智/近战本体数 + 打钱/治疗/爆发浓度 + 8 条队伍向量主成分),每件东西学 15 个标量表示"对这类阵容有多在意"。写成差的形式,反对称由结构保证。</p>
+</section>
+
+<section>
+  <h2><span class="num">05</span>克制:证据扎实,吃到的有限</h2>
+  <p class="sub">三个独立案例都通过了安慰剂和混杂控制</p>
+  <div class="tw"><table>
+    <thead><tr><th>案例</th><th>低档</th><th>高档</th><th>检验</th></tr></thead>
+    <tbody>
+      <tr><td>死亡旋风 vs 敌方力量英雄数</td><td class="neg">−0.0101</td><td class="pos">+0.0260</td><td>300 个同频段技能安慰剂,z=+3.70</td></tr>
+      <tr><td>全能大 vs 敌方打钱位数</td><td class="neg">−0.0153</td><td class="pos">+0.0530</td><td>t=+5.77</td></tr>
+      <tr><td>冰魂本体 vs 敌方治疗浓度</td><td class="neg">−0.0105</td><td class="pos">+0.0115</td><td>t=+4.20</td></tr>
+    </tbody>
+  </table></div>
+  <p>三个都过了<strong>池内混杂控制</strong>:固定"这一局一共有几个力量英雄",只看"其中几个在对面"。三个总数档全部单调、方向一致,合并后 t 分别是 +3.76 / +6.51 / +4.32。这排除了"这种局本身就算不准"的解释。</p>
+  <div class="note">
+    <span class="lb">AD 特有的一个陷阱</span>
+    <p>技能池由这局的 10 个英雄决定,所以<strong>同英雄的技能必然同池</strong> —— 跨队共现中位数 15,665 局,是不同英雄(1,450)的 <strong>10.8 倍</strong>。这会让任何系统性偏差因为功效过高而"显著"。做了两个阴性对照:冰魂本体的效应在按大招位置分层后仍是 +0.0216(vs 不分层 +0.0220);割裂 vs 焦渴(同为血魔技能,共现 21,102 局)残差 +0.0019、t=0.64,没有伪信号。</p>
+  </div>
+
+  <h3>没解决的:旋风只吃到 1/12</h3>
+  <p>模型<strong>方向学对了</strong> —— 力量轴是死亡旋风 15 条轴里最大的一条(+0.0079,是全体标准差的 2.82 倍),智力轴是负的(−0.0052),和实测的对偶关系吻合。但幅度:</p>
+  <div class="box"><pre>模型给的    敌方每多一个力量英雄 → 胜率 +0.20 个百分点
+实测需要                             胜率 +2.5 个百分点
+                                          差 12 倍</pre></div>
+  <p>病根是<strong>统一收缩</strong>。7,680 个系数里绝大多数应该是零,训练用统一学习率 + 统一早停,停点由"大多数是噪声"决定,真信号被和噪声一起叫停。试了三条路都没解决:</p>
+  <ul>
+    <li><strong>换参数化</strong>(技能对 → 聚合轴,样本量 1,450 → 43,547):系数 0.0077,没动</li>
+    <li><strong>换轴集合</strong>(12 条 → 15 条):0.0077 → 0.0079,没动</li>
+    <li><strong>放松收缩</strong>(学习率 ×4 崩掉;显式 L2 让系数翻 2.1 倍,但聚合 logloss 变差 0.0007,且旋风<strong>在全体里的相对位置没变</strong>——2.82 → 2.70)</li>
+  </ul>
+  <p>最后一条最说明问题:解耦 weight decay 对所有参数施加同一个 λ,和早停一样是统一的;而 Adam 的自适应缩放恰好把"样本量差异"抹平了。真正的"按证据分配"需要绕开 Adam 重写求解器。</p>
+  <p>没继续做,因为预期收益已经很小:那条 3~5 档只有 n=1001、标准误 0.0144,实测的 +0.0503 本身 95% 区间是 [+0.022, +0.079]。<strong>模型给的保守值未必是错的。</strong></p>
+</section>
+
+<section>
+  <h2><span class="num">06</span>过程里的教训</h2>
+  <p class="sub">这些坑都实际踩到了,记下来免得再踩</p>
+  <ul>
+    <li><strong>随机初始化的组件不能和已收敛的组件联合训练。</strong> 犯了两遍:第一次是克制项用残差矩阵初始化、主模型从零,把模型卡在 0.587;第二次是换配合项时辅助头形状变了只能随机初始化,把热启动的 0.5806 拽到 0.6070。两次都得靠"先冻结、分段训"解决。</li>
+    <li><strong>从收敛解微调必须大幅降学习率。</strong> 8e-4 是从零训练的值,起点在最优解上时一轮就把参数踢飞,等于重新训练。降到 1e-4 仍然不如从零重训。</li>
+    <li><strong>float32 下的梯度自检会误报。</strong> 梯度被 batch 归一化压到 1e-8 量级,float32 的损失只有 ~1e-7 精度,差分测到的全是浮点噪声。必须隔离出那一项、在 float64 下查 —— 有一次因此误判"梯度全错",实际公式没问题。</li>
+    <li><strong>早停要真的加上。</strong> 训练脚本一直没有耐心早停,K=192 那次最优在第 11 轮却跑到第 19 轮还在跑,堵了后面四个实验一个多小时。</li>
+    <li><strong>前端展示要跟着模型口径改。</strong> 换成切半之后拆解面板还在用旧公式,同一个座位卡片显示 0.22、展开显示 0.890;总分行只算座位分不含新加的两项,导致 <code>sigmoid(左−右)</code> 和显示的胜率对不上(44.3% vs 53.2%)。两个都是玩家一眼能看出的自相矛盾。</li>
+    <li><strong>浏览器缓存要根治。</strong> 静态文件加 mtime 版本号,否则各人加载的 JS 版本不一致 —— 这也是之前"房主看不到、别人能看到"的根因。</li>
+  </ul>
+</section>
+
+<footer>
+  线上模型 <span class="mono">model_plan15_clr0.25</span>:配合项切半 K=96(前 48 维加分 / 后 48 维减分)+ 队伍构成 8 段 + 跨队克制 15 轴。
+  权重 <span class="mono">443 KB</span> 随页面下发,浏览器本地计算,服务端不参与推理。
+  上线前 JS 与 Python 逐样例对拍 logit 最大差 <span class="mono">6.85e-08</span>,反对称自检 <span class="mono">8.88e-16</span>。
+  回滚包 <span class="mono">/root/ad/rollback/before_3mod_20260903_200805.tgz</span>。
+</footer>
+</div>
